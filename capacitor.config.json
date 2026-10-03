@@ -1,0 +1,14 @@
+{
+  "appId": "com.minegames.lan",
+  "appName": "荔枝娱乐",
+  "webDir": "www",
+  "server": {
+    "url": "http://47.117.106.155/play/?v=apk101",
+    "androidScheme": "https",
+    "cleartext": true,
+    "allowNavigation": ["*"]
+  },
+  "ios": {
+    "contentInset": "never"
+  }
+}

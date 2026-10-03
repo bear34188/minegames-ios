@@ -1,0 +1,73 @@
+name: iOS unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install CocoaPods
+        run: |
+          if ! command -v pod >/dev/null 2>&1; then
+            brew install cocoapods
+          fi
+          pod --version
+
+      - name: Sync Capacitor iOS and install pods
+        run: npx cap sync ios
+
+      - name: Build unsigned iOS app
+        working-directory: ios/App
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$PWD/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            VALIDATE_PRODUCT=NO \
+            build
+
+      - name: Package unsigned IPA
+        working-directory: ios/App
+        run: |
+          set -euo pipefail
+          APP=$(find DerivedData/Build/Products/Release-iphoneos -maxdepth 1 -type d -name '*.app' | head -n 1)
+          test -n "$APP"
+          rm -rf Payload
+          mkdir Payload
+          cp -R "$APP" Payload/
+          zip -qry "$GITHUB_WORKSPACE/MineGames-unsigned.ipa" Payload
+          ls -lh "$GITHUB_WORKSPACE/MineGames-unsigned.ipa"
+          unzip -l "$GITHUB_WORKSPACE/MineGames-unsigned.ipa" | head
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: MineGames-unsigned-ipa
+          path: MineGames-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14

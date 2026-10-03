@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">荔枝娱乐</string>
+    <string name="title_activity_main">荔枝娱乐</string>
+    <string name="package_name">com.minegames.lan</string>
+    <string name="custom_url_scheme">com.minegames.lan</string>
+</resources>
